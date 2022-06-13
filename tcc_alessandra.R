@@ -64,12 +64,24 @@ birds_sjc_traits <- birds_sp[,-2]
 # checando missing data
 write.csv(birds_sjc_traits, "traits_birds_sjc")
 # Match lista de espécies e traits
+dir()
+traits_birds <- read.table("traits_birds_sjc.txt", sep="")
+names(traits_birds)
 
+# Selecionando os traits de interesse
+traits_birds_sel <-   traits_birds %>% select(sp:ForStrat.aerial)
+
+glimpse(traits_birds_sel)
+
+# Composição de espécies
+colnames(all_data)
+localities # composição de espécies
+abiotic_change # abiotic data
+traits_birds # traits
 
   
 #--- Data analysis
 # RLQ - dados abióticos, traits e composição
-
 
 #--- Data visualizing
 ggplot(all_data, aes(x=log10(size), y=Rich))+

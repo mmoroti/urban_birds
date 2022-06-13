@@ -68,20 +68,74 @@ dir()
 traits_birds <- read.table("traits_birds_sjc.txt", sep="")
 names(traits_birds)
 
-# Selecionando os traits de interesse
-traits_birds_sel <-   traits_birds %>% select(sp:ForStrat.aerial)
-
-glimpse(traits_birds_sel)
-
 # Composição de espécies
 colnames(all_data)
 localities # composição de espécies
-abiotic_change # abiotic data
-traits_birds # traits
+View(localities)
+# Aqui precisamos excluir Sporophila_falcirostris, Sporophila_frontalis porque não temos dados de massa corporal
+parques <- localities[,-c(273:274)]
+parques <- parques[,-1]
+parques <- parques[,-326]
 
-  
+# Dados abióticos dos parques urbanos
+# Handling name
+abiotic_change # abiotic data
+rownames(abiotic_change) <- abiotic_change[,1]#renomeando as linhas para os nomes dos parques
+abiotic_change <- abiotic_change[,-1] # retirando a primeira coluna nome dos parques
+abiotic_change <- abiotic_change %>% rename(agua=corpo.dagua, perm=permebealizado..m2., imper=impermeabilizado..m2., size=parque..m2. ) #facilitando o nome para chamar o objeto
+
+glimpse(abiotic_change) # variaveis fora do padrão
+abiotic_change$agua <- as.factor(abiotic_change$agua)
+abiotic_change$size <- as.numeric(abiotic_change$size)
+abiotic_change$NDRI <- as.numeric(abiotic_change$NDRI)
+
+# Atributos funcionais
+# Selecionando os traits de interesse e removendo missing data
+traits_birds_sel <- traits_birds %>% select(sp:ForStrat.aerial) %>% remove_missing(vars="BodyMass.Value") %>% distinct(sp, .keep_all = TRUE)
+
+traits_birds_sel$sp <- str_replace_all(traits_birds_sel$sp, "_", ".") #acertando a nomenclatura para dar match
+
+# Renomeando as linhas com os nomes das espécies
+row.names(traits_birds_sel) <- traits_birds_sel[,1]
+traits_birds_sel  <- traits_birds_sel[,-1]
+
+# Classificando variaveis
+traits_birds_sel$Nocturnal <- as.factor(traits_birds_sel$Nocturnal)
+traits_birds_sel$BodyMass.Value <- as.numeric(traits_birds_sel$BodyMass.Value)
+
+nrow(traits_birds_sel) # 323 linhas
+ncol(parques) # 325 colunas
+View(parques)
+
+# Quem são esses dois a mais?
+parques_list <- parques %>%
+  gather(key="sp",value="count", Accipiter.bicolor:Zonotrichia.capensis) %>% distinct(sp, .keep_all = TRUE)
+
+nrow(parques_list)# sem espécie repetida nas colunas
+anti_join(parques_list, traits_birds_sel, by="sp")
+#Mionectes.chibum     
+# Mionectes.rufiventris     
+# Presentes na lista mas não nos traits, removendo
+parques_final <- parques %>% select(-Mionectes.chibum,-Mionectes.rufiventris)
+ncol(parques_final) #323
+nrow(traits_birds_sel) #323
+
 #--- Data analysis
 # RLQ - dados abióticos, traits e composição
+coa1 <- dudi.coa(parques_final, scannf = FALSE, nf = 2)
+
+dudimil <- dudi.hillsmith(abiotic_change, scannf = FALSE, nf = 2, row.w = coa1$lw)
+
+duditrait <- dudi.hillsmith(traits_birds_sel, scannf = FALSE, nf = 2, row.w = coa1$cw)
+
+rlq1 <- rlq(dudimil, coa1, duditrait, scannf = FALSE, nf = 2)
+plot(rlq1)
+
+summary(rlq1)
+randtest(rlq1)
+
+fourthcorner.rlq(rlq1,type="Q.axes")
+fourthcorner.rlq(rlq1,type="R.axes")
 
 #--- Data visualizing
 ggplot(all_data, aes(x=log10(size), y=Rich))+

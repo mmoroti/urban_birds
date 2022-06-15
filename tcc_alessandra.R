@@ -42,11 +42,11 @@ abiotic$parque..m2. <- as.numeric(abiotic$parque..m2.)
 
 # criar full data set para gráficos
 localities <- cbind(composition, Rich = composition_rich$Rich)
-abiotic_change <- rename(abiotic, localities = Parque.Urbano) %>% select(-richness)
+abiotic_change <- rename(abiotic, localities = Parque.Urbano) %>% select(-richness,-impermeabilizado..m2.)
 
 # New dataset 
 all_data <- left_join(localities, abiotic_change, by="localities") 
-all_data <- rename(all_data, permm2 = permebealizado..m2.,  imperm2 = impermeabilizado..m2., size = parque..m2.) 
+all_data <- rename(all_data, permm2 = permebealizado..m2., size = parque..m2.) 
 
 #Conferindo quais espécies da lista possuem traits
 # Lista para join
@@ -65,8 +65,8 @@ birds_sjc_traits <- birds_sp[,-2]
 write.csv(birds_sjc_traits, "traits_birds_sjc")
 # Match lista de espécies e traits
 dir()
-traits_birds <- read.table("traits_birds_sjc.txt", sep="")
-names(traits_birds)
+traits_birds <- read.csv2("traits_birds2.csv" )
+View(traits_birds)
 
 # Composição de espécies
 colnames(all_data)
@@ -82,7 +82,7 @@ parques <- parques[,-326]
 abiotic_change # abiotic data
 rownames(abiotic_change) <- abiotic_change[,1]#renomeando as linhas para os nomes dos parques
 abiotic_change <- abiotic_change[,-1] # retirando a primeira coluna nome dos parques
-abiotic_change <- abiotic_change %>% rename(agua=corpo.dagua, perm=permebealizado..m2., imper=impermeabilizado..m2., size=parque..m2. ) #facilitando o nome para chamar o objeto
+abiotic_change <- abiotic_change %>% rename(agua=corpo.dagua, perm=permebealizado..m2., size=parque..m2. ) #facilitando o nome para chamar o objeto
 
 glimpse(abiotic_change) # variaveis fora do padrão
 abiotic_change$agua <- as.factor(abiotic_change$agua)
